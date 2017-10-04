@@ -22,9 +22,15 @@ compareResult CompareOperPriority(operation const& op1, operation const& op2) {
 		case operation::OPERATION_DIVIDE:
 			result = LT;
 			break;
+		default:
+			if (op1 == op2)
+				result = EQ;
+			else
+				result = NE;
+			break;
 
 		} 
-		break;
+	break;
 	//---------------------------------
 	case operation::OPERATION_MULTIPLY:
 	case operation::OPERATION_DIVIDE:
@@ -39,9 +45,15 @@ compareResult CompareOperPriority(operation const& op1, operation const& op2) {
 		case operation::OPERATION_DIVIDE:
 			result = EQ;
 			break;
+		default:
+			if (op1 == op2)
+				result = EQ;
+			else
+				result = NE;
+			break;
 
 		}
-		break;
+	break;
 	//---------------------------------
 	default:
 		if (op1 == op2) 

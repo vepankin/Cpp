@@ -21,7 +21,7 @@ int main()
 	MathTree *root = NULL, TheTree(strTheSum), *leaf(new MathTree(strTheSum));
 	
 	//operation op1 = operation::OPERATION_MULTIPLY, op2 = operation::OPERATION_PLUS, op3 = operation::OPERATION_DIVIDE;
-	//cout << "op1 ? op2 = " << (op1 >= op2)  << ". op2 ? op3 = " << (op2 >= op3);
+	//cout << "op1 ? op2 = " << CompareOperPriority(op1,op2)  << ". op2 ? op3 = " << CompareOperPriority(op2, op3);
 
 	//cout << strTheSum.find_first_of("+-*/(");
 
