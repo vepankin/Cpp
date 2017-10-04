@@ -11,6 +11,9 @@ class MathTree
 	MathTree *RightPart; // right part of the sum
 	MathTree *Parent; // pointer to the root node
 	operation nodeOperation; // operation to be applied to the left and the right part
+	bool bNegative; // true if tle value is negative
+	double absValue; // the absolute value. let it be double.
+	bool bEmptyValue; // represents the flag of an empty value (not set)
 	
 	void SetDefaultValues(std::string);
 	bool UncoverParentheses();

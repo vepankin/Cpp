@@ -15,6 +15,9 @@ void MathTree::SetDefaultValues(std::string _strSum)
 	Parent = NULL;
 	nodeOperation = operation::OPERATION_EMPTY;
 	strMath = _strSum;
+	bEmptyValue = true;
+	bNegative = false;
+	absValue = 0;
 }
 
 void MathTree::release() {
@@ -143,6 +146,7 @@ void MathTree::Split()
 {
 	std::size_t foundOp;
 	operation prevOp, curOp;
+	compareResult CompRes; 
 
 	MakeNewRoot();
 
@@ -168,11 +172,12 @@ void MathTree::Split()
 			
 			prevOp = GetPreviousOperation(this); // получить предыдущую операцию - поиск вверх по дереву
 
-			if (CompareOperPriority(curOp,prevOp)); // testing
+			CompRes = CompareOperPriority(curOp,prevOp); 
 
 			if (prevOp != operation::OPERATION_PARENTHESIS) {
 				//...
-				if ( (curOp >= prevOp) || (prevOp == operation::OPERATION_EMPTY) ) {
+				// if the priority of the current operation is greater or equal to the previous operation do:
+				if ( (CompRes == GT) || (CompRes == EQ) || (prevOp == operation::OPERATION_EMPTY) ) {
 					// идём вниз
 
 					std::string strLeft, strRight;
@@ -198,7 +203,7 @@ void MathTree::Split()
 		}
 		else {
 			// Не нашли символа операции...
-			// ...
+			// ... it means this is the value string (or empty)
 		}
 
 
