@@ -4,6 +4,7 @@
 
 enum class operation { OPERATION_PLUS, OPERATION_MINUS, OPERATION_MULTIPLY, OPERATION_DIVIDE, OPERATION_PARENTHESIS, OPERATION_EMPTY };
 
+bool CompareOperPriority(operation const &op1, operation const &op2);
 
 inline bool operator== (const operation lhs, const operation rhs) {
 

@@ -168,6 +168,8 @@ void MathTree::Split()
 			
 			prevOp = GetPreviousOperation(this); // получить предыдущую операцию - поиск вверх по дереву
 
+			if (CompareOperPriority(curOp,prevOp)); // testing
+
 			if (prevOp != operation::OPERATION_PARENTHESIS) {
 				//...
 				if ( (curOp >= prevOp) || (prevOp == operation::OPERATION_EMPTY) ) {
