@@ -34,6 +34,8 @@ int main()
 
 	cout << endl << "Root=" << root->IsRoot() << ". Math=" << root->strMath << endl;
 
+	cout << TheTree.GetParenthesesContent("(1+2*(5+6)-6)/67*33");
+
 	TheTree.destroyTree(); // delete all nodes except this one
 
 	//---

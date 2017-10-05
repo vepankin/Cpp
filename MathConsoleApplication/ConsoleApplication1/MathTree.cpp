@@ -47,7 +47,7 @@ void MathTree::destroyTree() {
 bool MathTree::UncoverParentheses()
 {
 	bool result = true;
-	std::size_t foundBegin, foundEnd, foundOp;
+	std::size_t foundBegin, foundEnd;
 
 	foundBegin = strMath.find_first_of("(((");
 	if (foundBegin != std::string::npos) {
@@ -120,6 +120,40 @@ operation MathTree::GetPreviousOperation(MathTree * const pNode)
 		result = pNode->Parent->nodeOperation;
 	
 	return result;
+}
+
+std::string MathTree::GetParenthesesContent(std::string strToParse)
+{
+	std::string result{""}; //c++11 style ;)
+	bool bfoundLastParenthesis = false;
+
+	if (strToParse[0] == '(') {
+
+		int counter{0};
+
+		for (int i = 0; (i < strToParse.length()) && (!bfoundLastParenthesis); i++) {
+			switch (strToParse[i])
+			{
+			case '(':
+				counter++;
+				break;
+			case ')':
+				counter--;
+				break;
+
+			default:
+				break;
+			}
+			
+			if (counter == 0)
+				bfoundLastParenthesis = true;
+
+			result = strToParse.substr(0, i+1);
+		}
+
+	}
+
+	return result; // returns the sum substring in parentheses
 }
 
 

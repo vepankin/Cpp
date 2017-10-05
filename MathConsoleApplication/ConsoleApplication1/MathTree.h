@@ -23,7 +23,11 @@ class MathTree
 
 	operation GetPreviousOperation(MathTree * const pNode);
 
+	
+
 public:
+	std::string GetParenthesesContent(std::string _str);
+
 	std::string strMath;  // a string representing the sum to be calculated
 
 	MathTree(std::string="");
