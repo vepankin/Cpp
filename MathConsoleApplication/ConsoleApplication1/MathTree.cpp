@@ -1,10 +1,13 @@
 #include "stdafx.h"
 #include "MathTree.h"
 #include <cstring>
+#include <algorithm>
 #include <iostream>
 #include <conio.h>
 #include <iostream>
 #include <cstdio>
+#include <cctype>
+
 
 
 
@@ -192,7 +195,8 @@ void MathTree::Split()
 	operation prevOp, curOp;
 	compareResult CompRes; 
 
-	MakeNewRoot();
+	// Here we should get Minuses and Pluses before the sum
+
 
 	if (strMath[0] == '(') {
 		//bool bUP = UncoverParentheses();
@@ -206,18 +210,19 @@ void MathTree::Split()
 		std::string strParenthesContent = GetParenthesesContent(strMath);
 
 		if (strMath == strParenthesContent) {
+			// this is "PURE Parentheses Sum"
 
-			//
 			std::string strContentWithoutParentheses = strParenthesContent.substr(1, strParenthesContent.length()-1);
 			LeftPart = new MathTree(strContentWithoutParentheses); // a node with the uncovered parentheses
 			LeftPart->Parent = this;
 			LeftPart->nodeOperation = operation::OPERATION_PARENTHESIS;
+			LeftPart->Split();
 
 		}
 		else {
+			// not a "PURE Parentheses Sum".
 
 		}
-
 		
 	}
 	else {
@@ -233,9 +238,10 @@ void MathTree::Split()
 				// ERROR !!!
 				// The first operation cannot be a PARENTHESIS (only if the first char is '('). 
 				// What is worse - cannot be a back parenthesis ')'.
-				// report an error ...
+				// Report an error ...
 
-			}else {
+			}
+			else {
 
 				prevOp = GetPreviousOperation(this); // получить предыдущую операцию - поиск вверх по дереву
 
@@ -259,6 +265,9 @@ void MathTree::Split()
 
 						LeftPart->Parent = this;
 						RightPart->Parent = this;
+
+						LeftPart->Split();
+						RightPart->Split();
 
 					}
 					else {
@@ -298,5 +307,16 @@ MathTree * MathTree::GetRoot()
 
 void MathTree::BuildTree() 
 {
+	// To start with - we should get rid of the spaces " ".
+
+	//std::string::iterator it = std::remove(strMath.begin(), strMath.end(), ' '); // <algorithm>
+	//strMath.erase(it, strMath.end()); // <algorithm>
+
+	// not only spaces but olso tabs.
+	// <cctype> is needed for "std::isspace"
+	for (int i = strMath.length() - 1; i >= 0; i--)
+		if (std::isspace(strMath[i])) strMath.erase(i,1);
+
+	// now we split ahead the sum and build the tree.
 	Split();
 }
