@@ -98,6 +98,9 @@ operation MathTree::GetOperationFromChar(char ch)
 	case '(':
 		result = operation::OPERATION_PARENTHESIS;
 		break;
+	case ')':
+		result = operation::OPERATION_BACK_PARENTHESIS;
+		break;
 	default:
 		result = operation::OPERATION_EMPTY;
 	}
@@ -127,6 +130,7 @@ std::string MathTree::GetParenthesesContent(std::string strToParse)
 	std::string result{""}; //c++11 style ;)
 	bool bfoundLastParenthesis = false;
 
+	// the first char should be a '(' !!!
 	if (strToParse[0] == '(') {
 
 		int counter{0};
@@ -145,12 +149,18 @@ std::string MathTree::GetParenthesesContent(std::string strToParse)
 				break;
 			}
 			
-			if (counter == 0)
+			if (counter == 0) {
 				bfoundLastParenthesis = true;
 
-			result = strToParse.substr(0, i+1);
+				result = strToParse.substr(0, i + 1);  
+			}
 		}
 
+	}
+
+	if (!bfoundLastParenthesis) {
+		// ERROR in the strToParse - the last ')' wasn't foound
+		// TO DO - return an error message...
 	}
 
 	return result; // returns the sum substring in parentheses
@@ -185,7 +195,7 @@ void MathTree::Split()
 	MakeNewRoot();
 
 	if (strMath[0] == '(') {
-		bool bUP = UncoverParentheses();
+		//bool bUP = UncoverParentheses();
 		
 		//-----------------------------------------------------------------------
 		// если это "pure" скобки - вся часть примера обрамлена скобками - 
@@ -193,46 +203,75 @@ void MathTree::Split()
 		// OPERATION_PARENTHESIS
 		//-----------------------------------------------------------------------
 
-		// ...
+		std::string strParenthesContent = GetParenthesesContent(strMath);
+
+		if (strMath == strParenthesContent) {
+
+			//
+			std::string strContentWithoutParentheses = strParenthesContent.substr(1, strParenthesContent.length()-1);
+			LeftPart = new MathTree(strContentWithoutParentheses); // a node with the uncovered parentheses
+			LeftPart->Parent = this;
+			LeftPart->nodeOperation = operation::OPERATION_PARENTHESIS;
+
+		}
+		else {
+
+		}
+
+		
 	}
 	else {
-		//
+		// the first char is not '('
 		
-		foundOp = strMath.find_first_of("+-*/(");
+		foundOp = strMath.find_first_of("+-*/()");
 	
 		if (foundOp != std::string::npos) {
 
 			curOp = GetOperationFromChar(strMath[foundOp]);
-			
-			prevOp = GetPreviousOperation(this); // получить предыдущую операцию - поиск вверх по дереву
 
-			CompRes = CompareOperPriority(curOp,prevOp); 
+			if ((curOp == operation::OPERATION_PARENTHESIS)||(curOp == operation::OPERATION_BACK_PARENTHESIS)) {
+				// ERROR !!!
+				// The first operation cannot be a PARENTHESIS (only if the first char is '('). 
+				// What is worse - cannot be a back parenthesis ')'.
+				// report an error ...
 
-			if (prevOp != operation::OPERATION_PARENTHESIS) {
-				//...
-				// if the priority of the current operation is greater or equal to the previous operation do:
-				if ( (CompRes == GT) || (CompRes == EQ) || (prevOp == operation::OPERATION_EMPTY) ) {
-					// идём вниз
+			}else {
 
-					std::string strLeft, strRight;
-					
-					nodeOperation = curOp; // current node operation
+				prevOp = GetPreviousOperation(this); // получить предыдущую операцию - поиск вверх по дереву
 
-					strLeft = strMath.substr(0, foundOp);
-					strRight = strMath.substr(foundOp+1);
+				CompRes = CompareOperPriority(curOp, prevOp);
 
-					LeftPart = new MathTree(strLeft);
-					RightPart = new MathTree(strRight);
+				if (prevOp != operation::OPERATION_PARENTHESIS) {
+					//...
+					// if the priority of the current operation is greater or equal to the previous operation do:
+					if ((CompRes == GT) || (CompRes == EQ) || (prevOp == operation::OPERATION_EMPTY)) {
+						// идём вниз
 
-					LeftPart->Parent = this;
-					RightPart->Parent = this;
+						std::string strLeft, strRight;
 
-				}else{
-					// одём вверх (до скобки, если есть, или до корня, при отсутствии скобок)
-					// и переносим правую часть выше корня/корня-скобки
+						nodeOperation = curOp; // current node operation
 
-				};
-			}
+						strLeft = strMath.substr(0, foundOp);
+						strRight = strMath.substr(foundOp + 1);
+
+						LeftPart = new MathTree(strLeft);
+						RightPart = new MathTree(strRight);
+
+						LeftPart->Parent = this;
+						RightPart->Parent = this;
+
+					}
+					else {
+						// одём вверх (до скобки, если есть, или до корня, при отсутствии скобок)
+						// и переносим правую часть выше корня/корня-скобки
+
+					};
+				}
+				else {
+					// Previous operation is Parenthesis
+				
+				}
+			} // not a parenthesis operation == OK
 
 		}
 		else {
@@ -241,7 +280,7 @@ void MathTree::Split()
 		}
 
 
-	};
+	} // the first char is not a '('
 
 }
 

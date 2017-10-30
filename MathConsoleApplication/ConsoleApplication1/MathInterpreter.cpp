@@ -12,6 +12,8 @@ using namespace std;
 
 int main()
 {	
+	cout << 10 - - + 5 / - - 3 - - 10 - - + -(5 - -6) << endl;
+
 	char ch; 
 	string strTheSum;
 	
@@ -34,7 +36,7 @@ int main()
 
 	cout << endl << "Root=" << root->IsRoot() << ". Math=" << root->strMath << endl;
 
-	cout << TheTree.GetParenthesesContent("(1+2*(5+6)-6)/67*33");
+	cout << TheTree.GetParenthesesContent("(1+2*(5+6)-6)"); // test
 
 	TheTree.destroyTree(); // delete all nodes except this one
 
