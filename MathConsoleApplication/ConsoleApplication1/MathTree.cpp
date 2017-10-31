@@ -292,7 +292,7 @@ void MathTree::Split()
 			
 			if ( (foundOp != std::string::npos) && (foundOp == 0) ) {
 			
-				curOp = GetOperationFromChar(strMath[foundOp]);
+				curOp = GetOperationFromChar(strAfterParentheses[foundOp]);
 				prevOp = GetPreviousOperation(this); // получить предыдущую операцию - поиск вверх по дереву
 
 				CompRes = CompareOperPriority(curOp, prevOp);
@@ -580,18 +580,21 @@ void MathTree::BuildTree()
 	Split();
 }
 
-void MathTree::PrintNodes(MathTree *pNode, int Level)
+void MathTree::PrintNodes(MathTree *pNode, int ParentLevel, int NodeLevel)
 {
+	int iNodeLevel = NodeLevel, iParentLevel = ParentLevel; 
+
 	if(pNode==nullptr)
 		pNode = GetRoot();
 
-	std::cout << "Level " << Level << ": "<< pNode->strMath << " Operation = " << OperationToString(pNode->nodeOperation) << std::endl;
+	std::cout << "Level   " << iParentLevel << ":"<< iNodeLevel << "   " << pNode->strMath << " Operation = " << OperationToString(pNode->nodeOperation) << ". Sign: "<< (pNode->bNegative ? "-" : "+") << std::endl;
 
+	iParentLevel++;
 
 	if (pNode->LeftPart != nullptr) 
-		PrintNodes(pNode->LeftPart, Level++);
+		PrintNodes(pNode->LeftPart, iParentLevel, 1);
 
 	if (pNode->RightPart != nullptr) 
-		PrintNodes(pNode->RightPart, Level++);
+		PrintNodes(pNode->RightPart, iParentLevel, 2);
 
 }
