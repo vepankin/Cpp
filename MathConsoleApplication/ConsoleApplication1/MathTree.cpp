@@ -32,7 +32,7 @@ void MathTree::destroyTree() {
 
 	// cut the connection to the ancestor for the "this" node should'nt be deleted from the root
 	if (Parent != nullptr)
-		Parent == LeftPart ? Parent->LeftPart = NULL : Parent->RightPart = NULL;
+		Parent->LeftPart == this ? Parent->LeftPart = NULL : Parent->RightPart = NULL;
 		
 	// delete the root node
 	root = GetRoot();
