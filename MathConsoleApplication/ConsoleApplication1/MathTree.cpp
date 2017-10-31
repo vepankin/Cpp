@@ -10,8 +10,7 @@
 
 
 
-
-void MathTree::SetDefaultValues(std::string _strSum)
+void MathTree::SetDefaultValues(std::string _strSum, bool _bNegative)
 {
 	LeftPart = NULL;
 	RightPart = NULL;
@@ -19,7 +18,7 @@ void MathTree::SetDefaultValues(std::string _strSum)
 	nodeOperation = operation::OPERATION_EMPTY;
 	strMath = _strSum;
 	bEmptyValue = true;
-	bNegative = false;
+	bNegative = _bNegative;
 	absValue = 0;
 }
 
@@ -128,6 +127,69 @@ operation MathTree::GetPreviousOperation(MathTree * const pNode)
 	return result;
 }
 
+bool MathTree::GetSignAndDeletePlusesAndMinuses(std::string & _str)
+{
+	bool result = false;
+	int pos = 0;
+
+	for (int i = 0; (i < _str.length()); i++)
+		if ((_str[i] == '+') || (_str[i] == '-')){
+			pos++;
+			if (_str[i] == '-') result = !result; // negotiation 
+		}
+		else
+			break;
+
+	_str = _str.substr(pos); // return the sum without prefixes of '+' and '-'
+	
+	return result;
+}
+
+MathTree * MathTree::GetParenthesesNode()
+{
+	MathTree * ParenthesesNode = this;
+
+	// go up the tree until the Parentheses node is found or the topmost node is reached
+	while ((ParenthesesNode->nodeOperation != operation::OPERATION_PARENTHESIS) && (ParenthesesNode->Parent != nullptr))
+		ParenthesesNode = ParenthesesNode->Parent;
+	
+	return ParenthesesNode;
+}
+
+std::string MathTree::OperationToString(operation _oper)
+{
+	std::string result;
+
+	switch (_oper) {
+	case operation::OPERATION_PLUS:
+		result = "+";
+		break;
+	case operation::OPERATION_MINUS:
+		result = "-";
+		break;
+	case operation::OPERATION_MULTIPLY:
+		result = "*";
+		break;
+	case operation::OPERATION_DIVIDE:
+		result = "/";
+		break;
+	case operation::OPERATION_PARENTHESIS:
+		result = "(";
+		break;
+	case operation::OPERATION_EMPTY:
+		result = "[empty]";
+		break;
+	case operation::OPERATION_VALUE:
+		result = "[Value]";
+		break;
+	default:
+		result = "[unknown]";
+		break;
+	}
+	
+	return result;
+}
+
 std::string MathTree::GetParenthesesContent(std::string strToParse)
 {
 	std::string result{""}; //c++11 style ;)
@@ -170,9 +232,9 @@ std::string MathTree::GetParenthesesContent(std::string strToParse)
 }
 
 
-MathTree::MathTree(std::string _strSum)
+MathTree::MathTree(std::string _strSum, bool _bNegative)
 {
-	SetDefaultValues(_strSum); // initialization
+	SetDefaultValues(_strSum, _bNegative); // initialization
 }
 
 
@@ -194,16 +256,16 @@ void MathTree::Split()
 	std::size_t foundOp;
 	operation prevOp, curOp;
 	compareResult CompRes; 
+	bool IsNegative; // a local boolean of the sign
 
-	// Here we should get Minuses and Pluses before the sum
-
+	// Here we should get rid of Minuses and Pluses before the sum
+	IsNegative = GetSignAndDeletePlusesAndMinuses(strMath);
 
 	if (strMath[0] == '(') {
-		//bool bUP = UncoverParentheses();
 		
 		//-----------------------------------------------------------------------
 		// если это "pure" скобки - вся часть примера обрамлена скобками - 
-		// раскрыть скобки и передать в LeftPart, операцию установить в значение
+		// раскрыть скобки и передать в LeftPart, текущую операцию установить в значение
 		// OPERATION_PARENTHESIS
 		//-----------------------------------------------------------------------
 
@@ -211,22 +273,134 @@ void MathTree::Split()
 
 		if (strMath == strParenthesContent) {
 			// this is "PURE Parentheses Sum"
-
-			std::string strContentWithoutParentheses = strParenthesContent.substr(1, strParenthesContent.length()-1);
+			
+			// if the whole Sum is in the parentheses
+			nodeOperation = operation::OPERATION_PARENTHESIS;
+			bNegative = (bNegative || IsNegative); // the sign before the Parentheses
+						
+			std::string strContentWithoutParentheses = strParenthesContent.substr(1, strParenthesContent.length()-2);
 			LeftPart = new MathTree(strContentWithoutParentheses); // a node with the uncovered parentheses
 			LeftPart->Parent = this;
-			LeftPart->nodeOperation = operation::OPERATION_PARENTHESIS;
 			LeftPart->Split();
 
 		}
 		else {
 			// not a "PURE Parentheses Sum".
+			// the fist symbol after the parentheses is an operation
+			std::string strAfterParentheses = strMath.substr(strParenthesContent.length());
+			foundOp = strAfterParentheses.find_first_of("+-*/");
+			
+			if ( (foundOp != std::string::npos) && (foundOp == 0) ) {
+			
+				curOp = GetOperationFromChar(strMath[foundOp]);
+				prevOp = GetPreviousOperation(this); // получить предыдущую операцию - поиск вверх по дереву
 
-		}
+				CompRes = CompareOperPriority(curOp, prevOp);
+
+				// if the priority of the current operation is greater or equal to the previous operation do:
+				if ((CompRes == GT) || (CompRes == EQ) || (prevOp == operation::OPERATION_EMPTY) || (prevOp == operation::OPERATION_PARENTHESIS)) {
+					// идём вниз
+
+					std::string strLeft, strRight;
+
+					nodeOperation = curOp; // current node operation
+
+					strLeft = strParenthesContent; // the sum with the parentheses
+					strRight = strAfterParentheses.substr(foundOp + 1);
+
+					LeftPart = new MathTree(strLeft,IsNegative); // pass the sign that is before the parentheses
+					LeftPart->nodeOperation = operation::OPERATION_PARENTHESIS; // assign the operation
+
+					RightPart = new MathTree(strRight);
+
+					LeftPart->Parent = this;
+					RightPart->Parent = this;
+					
+					LeftPart->Split();
+					RightPart->Split();
+
+				}
+				else {
+					// одём вверх (до скобки, если есть, или до корня, при отсутствии скобок)
+					// и переносим правую часть выше корня/корня-скобки
+
+					MathTree * ParNode = GetParenthesesNode();
+
+					if (ParNode->nodeOperation == operation::OPERATION_PARENTHESIS) {
+						// it is a parentheses node
+
+						std::string strLeft, strRight;
+
+						nodeOperation = operation::OPERATION_VALUE; // current node operation
+
+						strLeft = strParenthesContent; // the sum with the parentheses
+						strRight = strAfterParentheses.substr(foundOp + 1);
+
+						LeftPart = new MathTree(strLeft, IsNegative); // pass the sign of the left side
+						LeftPart->Parent = this;
+						LeftPart->nodeOperation = operation::OPERATION_PARENTHESIS; // assign the operation
+
+						// insert a node right after the parentheses node into the left part
+						MathTree * NewTopNode = new MathTree("..." + strRight);
+						NewTopNode->nodeOperation = curOp;
+						NewTopNode->LeftPart = ParNode->LeftPart;
+						ParNode->LeftPart = NewTopNode;
+						NewTopNode->Parent = ParNode;
+						NewTopNode->LeftPart->Parent = NewTopNode;
+
+
+						NewTopNode->RightPart = new MathTree(strRight);
+						NewTopNode->RightPart->Parent = NewTopNode;
+
+						LeftPart->Split();
+						NewTopNode->RightPart->Split();
+
+					}
+					else
+					{
+						// this is a root node
+
+						std::string strLeft, strRight;
+
+						nodeOperation = operation::OPERATION_VALUE; // current node operation
+
+						strLeft = strParenthesContent; // the sum with the parentheses
+						strRight = strAfterParentheses.substr(foundOp + 1);
+
+						LeftPart = new MathTree(strLeft, IsNegative); // pass the sign of the left side
+						LeftPart->Parent = this;
+
+
+						MathTree * NewTopNode = new MathTree("..." + strRight);
+						NewTopNode->nodeOperation = curOp;
+						NewTopNode->LeftPart = ParNode;
+						ParNode->Parent = NewTopNode;
+
+						NewTopNode->RightPart = new MathTree(strRight);
+						NewTopNode->RightPart->Parent = NewTopNode;
+
+						LeftPart->Split();
+						NewTopNode->RightPart->Split();
+
+					}
+
+
+				}
+
+			}
+			else
+			{
+				// ERROR in Math!!!
+				// an operation is expected
+				// Report an error ...
+			}
+
+
+		} // end of "not a pure parentheses sum"
 		
 	}
-	else {
-		// the first char is not '('
+	else 
+	{ // the first char is not '('
 		
 		foundOp = strMath.find_first_of("+-*/()");
 	
@@ -234,58 +408,132 @@ void MathTree::Split()
 
 			curOp = GetOperationFromChar(strMath[foundOp]);
 
-			if ((curOp == operation::OPERATION_PARENTHESIS)||(curOp == operation::OPERATION_BACK_PARENTHESIS)) {
+			if ( (curOp == operation::OPERATION_PARENTHESIS) || (curOp == operation::OPERATION_BACK_PARENTHESIS) ) {
 				// ERROR !!!
 				// The first operation cannot be a PARENTHESIS (only if the first char is '('). 
 				// What is worse - cannot be a back parenthesis ')'.
 				// Report an error ...
 
 			}
-			else {
-
+			else 
+			{
 				prevOp = GetPreviousOperation(this); // получить предыдущую операцию - поиск вверх по дереву
 
 				CompRes = CompareOperPriority(curOp, prevOp);
 
-				if (prevOp != operation::OPERATION_PARENTHESIS) {
-					//...
-					// if the priority of the current operation is greater or equal to the previous operation do:
-					if ((CompRes == GT) || (CompRes == EQ) || (prevOp == operation::OPERATION_EMPTY)) {
-						// идём вниз
+				// if the priority of the current operation is greater or equal to the previous operation do:
+				if ((CompRes == GT) || (CompRes == EQ) || (prevOp == operation::OPERATION_EMPTY) || (prevOp == operation::OPERATION_PARENTHESIS)) {
+					// going down the tree
 
+					std::string strLeft, strRight;
+
+					nodeOperation = curOp; // current node operation
+
+					strLeft = strMath.substr(0, foundOp);
+					strRight = strMath.substr(foundOp + 1);
+
+					LeftPart = new MathTree(strLeft, IsNegative); // pass the sign of the left side
+					RightPart = new MathTree(strRight);
+
+					LeftPart->Parent = this;
+					RightPart->Parent = this;
+
+					LeftPart->Split();
+					RightPart->Split();
+
+				}
+				else {
+					// одём вверх (до скобки, если есть, или до корня, при отсутствии скобок)
+					// и переносим правую часть выше корня/корня-скобки
+					
+					MathTree * ParNode = GetParenthesesNode();
+					
+					if (ParNode->nodeOperation == operation::OPERATION_PARENTHESIS) {
+						// it is a parentheses node
+						
 						std::string strLeft, strRight;
 
-						nodeOperation = curOp; // current node operation
+						nodeOperation = operation::OPERATION_VALUE; // current node operation
 
 						strLeft = strMath.substr(0, foundOp);
 						strRight = strMath.substr(foundOp + 1);
 
-						LeftPart = new MathTree(strLeft);
-						RightPart = new MathTree(strRight);
-
+						LeftPart = new MathTree(strLeft, IsNegative); // pass the sign of the left side
 						LeftPart->Parent = this;
-						RightPart->Parent = this;
+
+						// insert a node right after the parentheses node into the left part
+						MathTree * NewTopNode = new MathTree("..." + strRight);
+						NewTopNode->nodeOperation = curOp;
+						NewTopNode->LeftPart = ParNode->LeftPart;
+						ParNode->LeftPart = NewTopNode;
+						NewTopNode->Parent = ParNode;
+						NewTopNode->LeftPart->Parent = NewTopNode;
+												
+
+						NewTopNode->RightPart = new MathTree(strRight);
+						NewTopNode->RightPart->Parent = NewTopNode;
 
 						LeftPart->Split();
-						RightPart->Split();
+						NewTopNode->RightPart->Split();
 
 					}
-					else {
-						// одём вверх (до скобки, если есть, или до корня, при отсутствии скобок)
-						// и переносим правую часть выше корня/корня-скобки
+					else
+					{
+						// this is a root node
 
-					};
+						std::string strLeft, strRight;
+
+						nodeOperation = operation::OPERATION_VALUE; // current node operation
+
+						strLeft = strMath.substr(0, foundOp);
+						strRight = strMath.substr(foundOp + 1);
+
+						LeftPart = new MathTree(strLeft, IsNegative); // pass the sign of the left side
+						LeftPart->Parent = this;
+
+						
+						MathTree * NewTopNode = new MathTree("..."+strRight);
+						NewTopNode->nodeOperation = curOp;
+						NewTopNode->LeftPart = ParNode;
+						ParNode->Parent = NewTopNode;
+
+						NewTopNode->RightPart = new MathTree(strRight);
+						NewTopNode->RightPart->Parent = NewTopNode;
+						
+						LeftPart->Split();
+						NewTopNode->RightPart->Split();
+											
+					}
 				}
-				else {
-					// Previous operation is Parenthesis
 				
-				}
+				
 			} // not a parenthesis operation == OK
 
 		}
 		else {
 			// Не нашли символа операции...
 			// ... it means this is the value string (or empty)
+			if (strMath.length() == 0) {
+				// report an ERROR ...
+				// the Value is expected
+			}
+			else
+			{
+				// This 'strMath' is a value string
+				bNegative = (bNegative || IsNegative); // set the sign (if it is a Left side - the sign has been set before)
+				try
+				{
+					absValue = std::stod(strMath);
+					bEmptyValue = false; // ОК
+				}
+				catch (const std::exception&)
+				{
+					// report an ERROR
+					//std::cout << "ERROR";
+				}
+				
+
+			}
 		}
 
 
@@ -309,14 +557,41 @@ void MathTree::BuildTree()
 {
 	// To start with - we should get rid of the spaces " ".
 
+	//--------------------------------------------------------------------
+	// TO DO :
+	// there might be a situation when the string is wrong e.g.: "6 7 8". 
+	// as for now it would be transformed to "678" by deleting the spaces.
+	// It seems wrong...
+	// That's why - the ERROR message should be shown before going ahead.
+	// ...
+	//--------------------------------------------------------------------
+
+
 	//std::string::iterator it = std::remove(strMath.begin(), strMath.end(), ' '); // <algorithm>
 	//strMath.erase(it, strMath.end()); // <algorithm>
-
-	// not only spaces but olso tabs.
+		
+	// remove not only spaces but olso tabs.
 	// <cctype> is needed for "std::isspace"
-	for (int i = strMath.length() - 1; i >= 0; i--)
+	for (int i = (int)strMath.length() - 1; i >= 0; i--)
 		if (std::isspace(strMath[i])) strMath.erase(i,1);
-
+	
+	
 	// now we split ahead the sum and build the tree.
 	Split();
+}
+
+void MathTree::PrintNodes(MathTree *pNode, int Level)
+{
+	if(pNode==nullptr)
+		pNode = GetRoot();
+
+	std::cout << "Level " << Level << ": "<< pNode->strMath << " Operation = " << OperationToString(pNode->nodeOperation) << std::endl;
+
+
+	if (pNode->LeftPart != nullptr) 
+		PrintNodes(pNode->LeftPart, Level++);
+
+	if (pNode->RightPart != nullptr) 
+		PrintNodes(pNode->RightPart, Level++);
+
 }
