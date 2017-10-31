@@ -580,21 +580,19 @@ void MathTree::BuildTree()
 	Split();
 }
 
-void MathTree::PrintNodes(MathTree *pNode, int ParentLevel, int NodeLevel)
+void MathTree::PrintNodes(MathTree *pNode, std::string strLevel)
 {
-	int iNodeLevel = NodeLevel, iParentLevel = ParentLevel; 
-
+	
 	if(pNode==nullptr)
 		pNode = GetRoot();
 
-	std::cout << "Level   " << iParentLevel << ":"<< iNodeLevel << "   " << pNode->strMath << " Operation = " << OperationToString(pNode->nodeOperation) << ". Sign: "<< (pNode->bNegative ? "-" : "+") << std::endl;
-
-	iParentLevel++;
-
+	std::cout << "Level   " << strLevel << "   " << pNode->strMath << " Operation = " << OperationToString(pNode->nodeOperation) << ". Sign: "<< (pNode->bNegative ? "-" : "+") << std::endl;
+	
+	
 	if (pNode->LeftPart != nullptr) 
-		PrintNodes(pNode->LeftPart, iParentLevel, 1);
-
+		PrintNodes(pNode->LeftPart, strLevel + "-1");
+		
 	if (pNode->RightPart != nullptr) 
-		PrintNodes(pNode->RightPart, iParentLevel, 2);
+		PrintNodes(pNode->RightPart, strLevel + "-2");
 
 }

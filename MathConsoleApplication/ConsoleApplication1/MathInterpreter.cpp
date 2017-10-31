@@ -41,7 +41,9 @@ int main()
 	//cout << TheTree.GetParenthesesContent("(1+2*(5+6)-6)"); // test
 
 	TheTree.PrintNodes();
-		
+	
+	TheTree.destroyTree(); // delete all nodes except this one
+
 	//---
 	//delete leaf;
 	//leaf = NULL;
@@ -53,8 +55,7 @@ int main()
 	cout << endl << "Press any key to exit" << endl;
 	ch = _getch(); // wait for a keypress
 
-	TheTree.destroyTree(); // delete all nodes except this one
-
+	
     //printf("Hello, world!\n");
     //printf(pStr);
     //printf("Enter a string: ");

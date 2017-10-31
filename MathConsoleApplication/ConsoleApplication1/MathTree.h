@@ -47,6 +47,6 @@ public:
 	MathTree * GetRoot();
 	void BuildTree();
 
-	void PrintNodes(MathTree* = nullptr, int = 0, int = 0);
+	void PrintNodes(MathTree* = nullptr, std::string = "0");
 };
 
