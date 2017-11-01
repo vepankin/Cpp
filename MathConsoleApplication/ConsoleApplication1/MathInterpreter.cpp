@@ -22,6 +22,8 @@ int main()
 	MathTree TheTree(strTheSum);
 	TheTree.BuildTree();
 		
+	std::cout.precision(10); // sets the precision 
+
 	if (TheTree.Calculate())
 		cout << "The result: " << TheTree.GetResult(); 
 	else

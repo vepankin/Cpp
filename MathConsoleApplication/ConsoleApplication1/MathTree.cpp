@@ -547,7 +547,6 @@ void MathTree::PrintNodes(MathTree *pNode, std::string strLevel)
 
 	std::cout << "Level   " << strLevel << "   " << pNode->strMath << " Operation = " << OperationToString(pNode->nodeOperation) << ". Sign: "<< (pNode->bNegative ? "- . Value = " : "+ . Value = ") << pNode->absValue  << std::endl;
 	
-	
 	if (pNode->LeftPart != nullptr) 
 		PrintNodes(pNode->LeftPart, strLevel + "-1");
 		
