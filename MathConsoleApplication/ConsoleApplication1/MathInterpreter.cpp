@@ -40,7 +40,16 @@ int main()
 
 	//cout << TheTree.GetParenthesesContent("(1+2*(5+6)-6)"); // test
 
-	TheTree.PrintNodes();
+	TheTree.PrintNodes(); // print the tree
+	cout << endl << "----------------------------------------------" << endl;
+
+	if (TheTree.Calculate())
+		cout << "The result: " << TheTree.GetResult(); 
+	else
+		cout << "The result: N/A.";
+
+	cout << endl << "----------------------------------------------" << endl;
+	TheTree.PrintNodes(); // print the tree
 	
 	TheTree.destroyTree(); // delete all nodes except this one
 

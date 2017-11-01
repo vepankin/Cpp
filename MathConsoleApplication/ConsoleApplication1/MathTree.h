@@ -29,6 +29,8 @@ class MathTree
 
 	std::string OperationToString(operation _oper);
 
+	double GetNodeValue();
+
 public:
 	std::string GetParenthesesContent(std::string _str);
 
@@ -48,5 +50,8 @@ public:
 	void BuildTree();
 
 	void PrintNodes(MathTree* = nullptr, std::string = "0");
+
+	bool Calculate(); // calculate the value in the Root Node
+	double GetResult(); // returns the value of the Root Node
 };
 

@@ -190,6 +190,7 @@ std::string MathTree::OperationToString(operation _oper)
 	return result;
 }
 
+
 std::string MathTree::GetParenthesesContent(std::string strToParse)
 {
 	std::string result{""}; //c++11 style ;)
@@ -298,7 +299,7 @@ void MathTree::Split()
 				CompRes = CompareOperPriority(curOp, prevOp);
 
 				// if the priority of the current operation is greater or equal to the previous operation do:
-				if ((CompRes == GT) || (CompRes == EQ) || (prevOp == operation::OPERATION_EMPTY) || (prevOp == operation::OPERATION_PARENTHESIS)) {
+				if ((CompRes == GT) || /*(CompRes == EQ) ||*/ (prevOp == operation::OPERATION_EMPTY) || (prevOp == operation::OPERATION_PARENTHESIS)) {
 					// идём вниз
 
 					std::string strLeft, strRight;
@@ -422,7 +423,7 @@ void MathTree::Split()
 				CompRes = CompareOperPriority(curOp, prevOp);
 
 				// if the priority of the current operation is greater or equal to the previous operation do:
-				if ((CompRes == GT) || (CompRes == EQ) || (prevOp == operation::OPERATION_EMPTY) || (prevOp == operation::OPERATION_PARENTHESIS)) {
+				if ((CompRes == GT) || /*(CompRes == EQ) ||*/ (prevOp == operation::OPERATION_EMPTY) || (prevOp == operation::OPERATION_PARENTHESIS)) {
 					// going down the tree
 
 					std::string strLeft, strRight;
@@ -586,7 +587,7 @@ void MathTree::PrintNodes(MathTree *pNode, std::string strLevel)
 	if(pNode==nullptr)
 		pNode = GetRoot();
 
-	std::cout << "Level   " << strLevel << "   " << pNode->strMath << " Operation = " << OperationToString(pNode->nodeOperation) << ". Sign: "<< (pNode->bNegative ? "-" : "+") << std::endl;
+	std::cout << "Level   " << strLevel << "   " << pNode->strMath << " Operation = " << OperationToString(pNode->nodeOperation) << ". Sign: "<< (pNode->bNegative ? "- . Value = " : "+ . Value = ") << pNode->absValue  << std::endl;
 	
 	
 	if (pNode->LeftPart != nullptr) 
@@ -595,4 +596,94 @@ void MathTree::PrintNodes(MathTree *pNode, std::string strLevel)
 	if (pNode->RightPart != nullptr) 
 		PrintNodes(pNode->RightPart, strLevel + "-2");
 
+}
+
+// Returns if the Root Node Value is Calculated
+bool MathTree::Calculate()
+{
+	MathTree *pRoot = GetRoot();
+
+	// if the value has not been set
+	if (pRoot->bEmptyValue) {
+		double result = pRoot->GetNodeValue(); // recursive call from the root 
+	}
+	
+	return !(pRoot->bEmptyValue); // returns true if the Root has a value.
+}
+
+// returns the Value of the Root Node
+double MathTree::GetResult()
+{
+	MathTree * pRoot = GetRoot();
+	return pRoot->bNegative ? -(pRoot->absValue) : pRoot->absValue;
+}
+
+double MathTree::GetNodeValue()
+{
+	double leftValue, rightValue;
+
+	if ((LeftPart == nullptr) && (RightPart == nullptr)) {
+
+		try
+		{
+			absValue = std::stod(strMath); // TO DO: "123tyu457" transforms to 123. A string check should be added.
+			bEmptyValue = false; // ОК
+		}
+		catch (const std::exception&)
+		{
+			// report an ERROR
+			//std::cout << "ERROR";
+		}
+
+	}
+	else if (LeftPart == nullptr) {
+		absValue = RightPart->GetNodeValue();
+		bEmptyValue = RightPart->bEmptyValue;
+	}
+	else if (RightPart == nullptr) {
+		absValue = LeftPart->GetNodeValue();
+		bEmptyValue = LeftPart->bEmptyValue;
+	}
+	else {
+		// the node has an Operation
+		leftValue = LeftPart->GetNodeValue();
+		rightValue = RightPart->GetNodeValue();
+		bEmptyValue = ((LeftPart->bEmptyValue) || (RightPart->bEmptyValue));
+
+		if (!bEmptyValue) {
+
+			switch (nodeOperation) {
+			case operation::OPERATION_PLUS:
+				absValue = leftValue + rightValue;
+				break;
+			case operation::OPERATION_MINUS:
+				absValue = leftValue - rightValue;
+				break;
+			case operation::OPERATION_MULTIPLY:
+				absValue = leftValue * rightValue;
+				break;
+			case operation::OPERATION_DIVIDE:
+				if(rightValue!=0.0){
+					absValue = leftValue / rightValue;
+				}
+				else 
+				{
+					// ERROR MESSAGE !!!
+					// DIVISION BY ZERO!!!
+				}
+				
+				break;
+			default:
+				// ERROR!!!
+				// incompatible node operation !!!
+
+				break;
+
+			} // end switch
+
+		}
+				
+	}
+	
+	return bNegative ? -absValue : absValue;
 }
