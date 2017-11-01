@@ -627,13 +627,14 @@ double MathTree::GetNodeValue()
 				{
 					// ERROR MESSAGE !!!
 					// DIVISION BY ZERO!!!
+					bEmptyValue = true;
 				}
 				
 				break;
 			default:
 				// ERROR!!!
 				// incompatible node operation !!!
-
+				bEmptyValue = true;
 				break;
 
 			} // end switch

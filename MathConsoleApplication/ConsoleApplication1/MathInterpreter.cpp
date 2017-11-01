@@ -12,7 +12,6 @@ using namespace std;
 
 int main()
 {	
-	
 	char ch; 
 	string strTheSum;
 	
