@@ -22,9 +22,6 @@ void MathTree::SetDefaultValues(std::string _strSum, bool _bNegative)
 	absValue = 0;
 }
 
-void MathTree::release() {
-	delete this;
-}
 
 void MathTree::destroyTree() {
 
@@ -44,39 +41,6 @@ void MathTree::destroyTree() {
 	
 	delete RightPart;
 	RightPart = NULL;
-}
-
-bool MathTree::UncoverParentheses()
-{
-	bool result = true;
-	std::size_t foundBegin, foundEnd;
-
-	foundBegin = strMath.find_first_of("(((");
-	if (foundBegin != std::string::npos) {
-
-		foundEnd = strMath.find_last_of(")))");
-		if (foundEnd != std::string::npos) {
-
-			std::string strLeft = strMath.substr(foundBegin + 1, foundEnd - foundBegin - 1);
-			if (foundEnd == strMath.length() - 1) {
-				// no operation ahead
-
-			}
-			else if (strMath.length() - 1 - foundEnd >= 2) {
-				// ")" is followed by an operator and
-			}
-			else result = false; // there should be an operator and one or more digits
-
-			std::string strRight = strMath.substr(foundEnd);
-			
-
-			std::cout << strLeft; // testing
-
-		}
-		else result = false; // no closing ")"
-	};
-
-	return result;
 }
 
 operation MathTree::GetOperationFromChar(char ch)
@@ -110,16 +74,10 @@ operation MathTree::GetOperationFromChar(char ch)
 	return result;
 }
 
-void MathTree::MakeNewRoot()
-{
-	//(*Root) = new MathTree("new root created", Root);
-	//(*Root)->LeftPart = this;
-}
 
 operation MathTree::GetPreviousOperation(MathTree * const pNode)
 {
 	operation result = operation::OPERATION_EMPTY;
-	//MathTree * pLocalNode = pNode;
 	
 	if((pNode!=nullptr)&&(pNode->Parent!=nullptr))
 		result = pNode->Parent->nodeOperation;
@@ -299,7 +257,7 @@ void MathTree::Split()
 				CompRes = CompareOperPriority(curOp, prevOp);
 
 				// if the priority of the current operation is greater or equal to the previous operation do:
-				if ((CompRes == GT) || /*(CompRes == EQ) ||*/ (prevOp == operation::OPERATION_EMPTY) || (prevOp == operation::OPERATION_PARENTHESIS)) {
+				if ((CompRes == GT) || (prevOp == operation::OPERATION_EMPTY) || (prevOp == operation::OPERATION_PARENTHESIS)) {
 					// идём вниз
 
 					std::string strLeft, strRight;
@@ -423,7 +381,7 @@ void MathTree::Split()
 				CompRes = CompareOperPriority(curOp, prevOp);
 
 				// if the priority of the current operation is greater or equal to the previous operation do:
-				if ((CompRes == GT) || /*(CompRes == EQ) ||*/ (prevOp == operation::OPERATION_EMPTY) || (prevOp == operation::OPERATION_PARENTHESIS)) {
+				if ((CompRes == GT) || (prevOp == operation::OPERATION_EMPTY) || (prevOp == operation::OPERATION_PARENTHESIS)) {
 					// going down the tree
 
 					std::string strLeft, strRight;
